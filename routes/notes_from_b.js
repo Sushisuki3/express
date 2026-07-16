@@ -1,26 +1,28 @@
 var express = require('express');
 var router = express.Router();
-const cors = require('cors'); // corsミドルウェアを追加
+const cors = require('cors');
+require('dotenv').config();
 
-
-// 接続情報を設定
-const { MongoClient } = require("mongodb");
-const uri = "mongodb+srv://2301130002od_db_user:AF0vxWOMNPZkP8Gp@test.hug5bz8.mongodb.net/?retryWrites=true&w=majority&appName=test";
+const { MongoClient } = require('mongodb');
+const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri);
 
-// corsミドルウェアを使用
 router.use(cors());
 
-router.get('/', async (req, res) => {
-// データベース、コレクションを指定
-const database = client.db('notes');
-const notes = database.collection('notes');
+router.get('/', async function (req, res, next) {
+  try {
+    await client.connect();
 
+    const database = client.db('notes');
+    const notes = database.collection('notes');
 
-// 全てのドキュメントを取得
-const note = await notes.find({}).toArray();
+    const note = await notes.find({}).toArray();
 
-res.json(note);
-})
+    res.json(note);
+  } catch (error) {
+    console.error('MongoDBエラー:', error);
+    next(error);
+  }
+});
 
 module.exports = router;
